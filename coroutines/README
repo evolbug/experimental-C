@@ -1,0 +1,6 @@
+C coroutine implementation
+
+tested with (working):
+   gcc/cc   7.1.1
+   clang    4.0.1
+   tcc      0.9.27
