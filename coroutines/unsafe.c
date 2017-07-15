@@ -32,7 +32,7 @@
    {*__CRJMP__ = &&CAT(__CRJMP_, __LINE__); return __VA_ARGS__; CAT(__CRJMP_, __LINE__):;}
 
 
-int countDown coroutine(int n)
+int countDown coroutine (int n)
 {
    crBegin(ctx, int i, n);
 
@@ -43,11 +43,71 @@ int countDown coroutine(int n)
 }
 
 
+struct word {
+   const char* begin;
+   int length;
+};
+
+struct word parse coroutine (const char* str) {
+   struct word sentinel = {NULL, 0};
+
+   crBegin(ctx,
+      const char* begin; const char* end,
+      str, str
+   );
+
+   for(;; ctx->end++)
+   {
+      if(!*ctx->end)
+      {
+         int len = ctx->end - ctx->begin;
+
+         if(len > 0)
+            yield((struct word){ctx->begin, len});
+
+         break;
+      }
+
+      int len = ctx->end - ctx->begin;
+
+      if(*ctx->end == ' ')
+      {
+         if(len > 0)
+            yield((struct word){ctx->begin, len});
+
+         while(*ctx->end == ' ') ctx->end++;
+
+         ctx->begin = ctx->end;
+      }
+   }
+
+   crEnd(sentinel);
+}
+
+
 int main ()
 {
-   void* crcontext = 0;
-   int n = 0;
+   {
+      printf("countdown:\n");
 
-   while ((n=countDown(&crcontext, 10)))
-      printf("%d\n", n);
+      void* ctx = NULL;
+      int val = 0;
+
+      while ((val = countDown(&ctx, 10)))
+         printf("%d \n", val);
+
+      printf("\n");
+   }
+   {
+      printf("parsing strings:\n");
+
+      void* ctx = NULL;
+      const char* string = "Hello world I am a string";
+
+      struct word current_word = parse(&ctx, string);
+      while(current_word.begin) {
+         printf("'%.*s'\n", current_word.length, current_word.begin);
+         current_word = parse(&ctx, NULL);
+      }
+   }
 }
