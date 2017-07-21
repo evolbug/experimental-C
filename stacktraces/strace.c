@@ -3,36 +3,30 @@
 #include <stdlib.h>  // exit
 #include <stdio.h>   // printf
 
-struct __stackentry
+struct st_entry
 {
    char file[64], call[64];
    unsigned int line;
 };
 
-struct {struct __stackentry entry[255]; unsigned char curr;} __s = {.curr=0};
+struct {struct st_entry entry[255]; unsigned char curr;} ST = {.curr=0};
 
 
-#define __s_push(fn)\
-   __s.entry[__s.curr] = \
-      (struct __stackentry) {.file=__FILE__, .call=#fn, .line=__LINE__};\
-   if ((++__s.curr)+1 > 255) {puts("\nFunction stack overflow"); strace(); exit(1);}
+#define st_push(fn)\
+   ST.entry[ST.curr] = \
+      (struct st_entry) {.file=__FILE__, .call=#fn, .line=__LINE__};\
+   if ((++ST.curr)+1 > 255) {puts("\nFunction stack overflow"); st_trace(); exit(1);}
 
 
-// default call
-#define c(rtype, fn) ({ __s_push(fn); rtype r = fn; __s.curr--; r;})
-
-// void call
-#define v(fn) ({ __s_push(fn); fn; __s.curr--;})
-
-
-#define assert(cond, msg) \
+#define st_assert(cond, msg) \
    ({if (!(cond)){\
-      __s_push(assert(cond, msg));\
+      st_push(st_assert(cond, msg));\
       printf("\nAssert: %s", msg);\
-      strace(); exit(1);}\
+      st_trace(); exit(1);}\
    cond;})
 
-int __entry_equal (struct __stackentry* a, struct __stackentry* b)
+
+int st_entry_equal (struct st_entry* a, struct st_entry* b)
 {
    int f = 0, c = 0; // file/call readers
 
@@ -43,21 +37,31 @@ int __entry_equal (struct __stackentry* a, struct __stackentry* b)
    return 1;
 }
 
+
+
+// typed call
+#define st_c(rtype, fn) ({ st_push(fn); rtype r = fn; ST.curr--; r;})
+
+// void call
+#define st_v(fn) ({ st_push(fn); fn; ST.curr--;})
+
+
+
 void
-strace ()
+st_trace ()
 {
    printf("\nTraceback (last call first):\n");
 
-   struct __stackentry *entry;
+   struct st_entry *entry;
    int skip = 0;
 
-   for (int u = __s.curr; u > 0; u--)
+   for (int u = ST.curr; u > 0; u--)
    {
-      entry = &__s.entry[u-1];
+      entry = &ST.entry[u-1];
 
       if (skip)
       {
-         if (!__entry_equal(entry, &__s.entry[u]))
+         if (!st_entry_equal(entry, &ST.entry[u]))
          {
             printf(" %d more ...\n", skip);
             skip = 0;
@@ -71,7 +75,7 @@ strace ()
       {
          printf("%12s:%-5d| %s\n", entry->file, entry->line, entry->call);
 
-         if (__entry_equal(entry, &__s.entry[u]))
+         if (st_entry_equal(entry, &ST.entry[u]))
          {
             skip++;
             printf("%12s", "...");
@@ -86,26 +90,26 @@ strace ()
 int
 checkeven(int n)
 {
-   return assert(n%2, "oh no! it's even!");
+   return st_assert(n%2, "oh no! it's even!");
 }
 
 int
 foo (int n)
 {
-   return c(int, checkeven(n));
+   return st_c(int, checkeven(n));
 }
 
 int
 recurs(int n)
 {
-   if (n>0) return c(int, recurs(n-1));
+   if (n>0) return st_c(int, recurs(n-1));
    return 0;
 }
 
 int
 main ()
 {
-   c(int, foo(13));
-   c(int, recurs(253)); // 254 and overflow triggers
-   c(int, foo(12));
+   st_c(int, foo(13));
+   st_c(int, recurs(255)); // 254 and overflow triggers
+   st_c(int, foo(12));
 }
