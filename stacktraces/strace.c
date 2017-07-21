@@ -37,8 +37,8 @@ int __entry_equal (struct __stackentry* a, struct __stackentry* b)
    int f = 0, c = 0; // file/call readers
 
    if (a->line != b->line) return 0;
-   while (a->file[f]!=0) if (a->file[f] != b->file[f]) return 0; else f++;
-   while (a->call[c]!=0) if (a->call[c] != b->call[c]) return 0; else c++;
+   while (a->file[f]!=0 || b->file[f]!=0) if (a->file[f] != b->file[f]) return 0; else f++;
+   while (a->call[c]!=0 || b->file[f]!=0) if (a->call[c] != b->call[c]) return 0; else c++;
 
    return 1;
 }
