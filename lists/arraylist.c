@@ -1,5 +1,4 @@
 #include <stdlib.h> // malloc, realloc
-#include <stdio.h>  // printf
 #include <stdarg.h> // va_list, va_start, va_arg, va_end
 
 #define LSBODY(type) { \
@@ -38,6 +37,8 @@ unsigned int Length (void* l) { return *((unsigned int*)l - 1); }
 void Delete (void* l) {void *realptr = ((unsigned int*)l) - 1; free(realptr);}
 
 /*
+#include <stdio.h>  // printf
+
 ListNewType(int);
 
 int main()
