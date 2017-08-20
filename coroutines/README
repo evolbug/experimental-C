@@ -1,6 +1,6 @@
-C coroutine implementation
+Various coroutine implementations in C
 
-tested with (working):
+All variants tested on x64 Linux with:
    gcc/cc   7.1.1
    clang    4.0.1
-   tcc      0.9.27
+   tcc      0.9.26
